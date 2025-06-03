@@ -37,15 +37,16 @@ import "./styles.css";
 function App() {
   const [text, setText] = useState("");
   const inputRef = useRef(null);
+  const cleanupTimeoutRef = useRef(null);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    cleanupTimeoutRef.current = setTimeout(() => {
       setText("");
       inputRef.current.value = "";
     }, 5000);
     return () => {
       console.log("unmounted");
-      clearTimeout(timeoutId);
+      clearTimeout(cleanupTimeoutRef.current);
     };
   }, [text]);
 
@@ -55,14 +56,19 @@ function App() {
 
   const debounced = debounce(handleTextChange, 1000);
 
+  const handleInputValueChange = e => {
+    debounced(e.target.value);
+
+    // stop the cleanup delay if there's one
+    clearTimeout(cleanupTimeoutRef.current);
+  };
+
   return (
     <div className="App">
       <h1>Search input...</h1>
       <input
         ref={inputRef}
-        onChange={(e) => {
-          debounced(e.target.value);
-        }}
+        onChange={handleInputValueChange}
       />
       <div>{text}</div>
     </div>
