@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef} from "react";
-import ReactDOM from "react-dom";
+import React, { useEffect, useState, useRef } from "react";
 import debounce from "lodash.debounce";
 
 // const fn = debounce(callback, timeout);
@@ -40,12 +39,14 @@ function App() {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => setText(""), 5000);
-    return () => {
-      console.log("unmounted")
-      clearTimeout(timeoutId);
+    const timeoutId = setTimeout(() => {
+      setText("");
       inputRef.current.value = "";
-    }
+    }, 5000);
+    return () => {
+      console.log("unmounted");
+      clearTimeout(timeoutId);
+    };
   }, [text]);
 
   const handleTextChange = (value) => {
@@ -57,16 +58,15 @@ function App() {
   return (
     <div className="App">
       <h1>Search input...</h1>
-      <input ref={inputRef} onChange={e => {
-        console.log("onchange fired", e.target.value)
-        debounced(e.target.value)
-      }} />
-      <div>
-        {text}
-      </div>
+      <input
+        ref={inputRef}
+        onChange={(e) => {
+          debounced(e.target.value);
+        }}
+      />
+      <div>{text}</div>
     </div>
   );
 }
 
-const rootElement = document.getElementById("root");
-ReactDOM.render(<App />, rootElement);
+export default App;
