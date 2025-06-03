@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import debounce from "lodash.debounce";
+
+import "./styles.css";
 
 // const fn = debounce(callback, timeout);
 // https://lodash.com/docs/4.17.11#debounce
@@ -23,53 +25,57 @@ is remaining before clearing
 
  */
 
-import "./styles.css";
+const DEBOUNCE_DELAY = 1000;
+const CLEAR_DELAY = 5000;
 
-/**
- function debounce(func, timeout = 300){
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { func.apply(this, args); }, timeout);
-  };
-}
- */
 function App() {
   const [text, setText] = useState("");
+  const [countdown, setCountdown] = useState(0);
   const inputRef = useRef(null);
   const cleanupTimeoutRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
 
   useEffect(() => {
     cleanupTimeoutRef.current = setTimeout(() => {
       setText("");
       inputRef.current.value = "";
-    }, 5000);
+    }, CLEAR_DELAY);
+
+    if (text) {
+      setCountdown(CLEAR_DELAY / 1000);
+      countdownIntervalRef.current = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    }
+
     return () => {
-      console.log("unmounted");
       clearTimeout(cleanupTimeoutRef.current);
+      clearInterval(countdownIntervalRef.current);
     };
   }, [text]);
 
-  const handleTextChange = (value) => {
-    setText(value);
-  };
-
-  const debounced = debounce(handleTextChange, 1000);
+  // useMemo to make sure that debounced is not re-creared on each render thus breaking desired behavior
+  const debounced = useMemo(() => debounce(setText, DEBOUNCE_DELAY), []);
 
   const handleInputValueChange = e => {
     debounced(e.target.value);
 
     // stop the cleanup delay if there's one
     clearTimeout(cleanupTimeoutRef.current);
+
+    // Reset countdown
+    clearInterval(countdownIntervalRef.current);
+    setCountdown(0);
   };
 
   return (
     <div className="App">
       <h1>Search input...</h1>
-      <input
-        ref={inputRef}
-        onChange={handleInputValueChange}
-      />
+        <input
+          ref={inputRef}
+          onChange={handleInputValueChange}
+        />
+        <span>{countdown ? `Cleaning up values in: ${countdown}` : ""}</span>
       <div>{text}</div>
     </div>
   );
